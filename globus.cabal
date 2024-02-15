@@ -1,0 +1,56 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           globus
+version:        0.1.0
+synopsis:       GLOBUS Data Transfer
+category:       System, Data
+homepage:       https://github.com/DKISTDC/globus-hs
+author:         Sean Hess
+maintainer:     shess@nso.edu
+license:        BSD-3-Clause
+build-type:     Simple
+extra-doc-files:
+    README.md
+
+library
+  exposed-modules:
+      Network.Globus
+      Test
+  other-modules:
+      Paths_globus
+  autogen-modules:
+      Paths_globus
+  hs-source-dirs:
+      src
+  default-extensions:
+      TypeFamilies
+      DataKinds
+      DeriveAnyClass
+      DerivingStrategies
+      OverloadedRecordDot
+      OverloadedStrings
+      QuasiQuotes
+      DuplicateRecordFields
+      LambdaCase
+      NoFieldSelectors
+      StrictData
+  ghc-options: -Wall
+  build-depends:
+      aeson
+    , base >=4.16.4.0
+    , bytestring
+    , exceptions
+    , hoauth2
+    , http-api-data
+    , http-client
+    , http-client-tls
+    , http-types
+    , mtl
+    , req
+    , text
+    , uri-bytestring
+  default-language: GHC2021

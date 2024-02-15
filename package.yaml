@@ -1,0 +1,56 @@
+name:               globus
+version:            0.1.0
+synopsis:           GLOBUS Data Transfer
+homepage:           https://github.com/DKISTDC/globus-hs
+license:            BSD-3-Clause
+author:             Sean Hess
+maintainer:         shess@nso.edu
+category:           System, Data
+
+extra-doc-files:
+  - README.md
+
+language: GHC2021
+
+ghc-options:
+  - -Wall
+
+default-extensions:
+  - TypeFamilies
+  - DataKinds
+  - DeriveAnyClass
+  - DerivingStrategies
+  - OverloadedRecordDot
+  - OverloadedStrings
+  - QuasiQuotes
+  - DuplicateRecordFields
+  - LambdaCase
+  - NoFieldSelectors
+  - StrictData
+
+dependencies:
+  - base >=4.16.4.0
+  - aeson
+  - bytestring
+  - exceptions
+  - hoauth2
+  - http-types
+  - http-client
+  - http-client-tls
+  - mtl
+  - req
+  - text
+  - uri-bytestring
+  - http-api-data
+
+library:
+  source-dirs: src
+
+
+# tests:
+#   tests:
+#     main:        Main.hs
+#     source-dirs: test/
+#     dependencies:
+#       - globus
+#
