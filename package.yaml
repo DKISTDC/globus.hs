@@ -31,6 +31,8 @@ default-extensions:
 dependencies:
   - base >=4.16.4.0
   - aeson
+  - base64-bytestring
+  - effectful
   - bytestring
   - exceptions
   - hoauth2
@@ -42,6 +44,7 @@ dependencies:
   - text
   - uri-bytestring
   - http-api-data
+
 
 library:
   source-dirs: src

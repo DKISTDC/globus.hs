@@ -18,8 +18,9 @@ extra-doc-files:
 
 library
   exposed-modules:
+      Effectful.Globus
+      Example
       Network.Globus
-      Test
   other-modules:
       Paths_globus
   autogen-modules:
@@ -42,7 +43,9 @@ library
   build-depends:
       aeson
     , base >=4.16.4.0
+    , base64-bytestring
     , bytestring
+    , effectful
     , exceptions
     , hoauth2
     , http-api-data
