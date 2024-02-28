@@ -1,5 +1,6 @@
 module Example where
 
+import Data.Tagged
 import Data.Text (pack, unpack)
 import Network.Globus
 import System.Environment
@@ -11,8 +12,8 @@ import System.Environment
 
 main :: IO ()
 main = do
-  cid <- Token . pack <$> getEnv "GLOBUS_CLIENT_ID"
-  sec <- Token . pack <$> getEnv "GLOBUS_CLIENT_SECRET"
+  cid <- Tagged . pack <$> getEnv "GLOBUS_CLIENT_ID"
+  sec <- Tagged . pack <$> getEnv "GLOBUS_CLIENT_SECRET"
   print cid
   print sec
 

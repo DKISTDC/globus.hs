@@ -44,6 +44,7 @@ dependencies:
   - text
   - uri-bytestring
   - http-api-data
+  - tagged
 
 
 library:

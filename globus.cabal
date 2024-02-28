@@ -21,6 +21,9 @@ library
       Effectful.Globus
       Example
       Network.Globus
+      Network.Globus.Auth
+      Network.Globus.Transfer
+      Network.Globus.Types
   other-modules:
       Paths_globus
   autogen-modules:
@@ -54,6 +57,7 @@ library
     , http-types
     , mtl
     , req
+    , tagged
     , text
     , uri-bytestring
   default-language: GHC2021
