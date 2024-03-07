@@ -10,6 +10,10 @@ module Effectful.Globus
   , TransferResponse (..)
   , TransferItem (..)
   , SyncLevel (..)
+  , Task (..)
+  , TaskStatus (..)
+  , TaskFilters (..)
+  , TaskList (..)
   ) where
 
 import Data.Tagged
@@ -32,13 +36,9 @@ data Globus :: Effect where
   AccessToken :: Token Exchange -> Globus m (Token Access)
   SubmissionId :: Token Access -> Globus m (Id Submission)
   Transfer :: Token Access -> TransferRequest -> Globus m TransferResponse
+  StatusTask :: Token Access -> Id Task -> Globus m Task
+  StatusTasks :: Token Access -> TaskFilters -> Globus m TaskList
 
-
--- TransferOOO :: Token Access -> TransferRequest -> Globus m TransferResponse
--- -- Woot :: Token Access -> TransferRequest -> Globus m TransferResponse
--- Henry :: Token Access -> TransferRequest -> Globus m ()
-
--- Woot :: Globus m ()
 
 type instance DispatchOf Globus = 'Dynamic
 
@@ -58,3 +58,7 @@ runGlobus g red = interpret $ \_ -> \case
     liftIO $ fetchSubmissionId access
   Transfer access request -> do
     liftIO $ sendTransfer access request
+  StatusTask access ti -> do
+    liftIO $ fetchTask access ti
+  StatusTasks access tf -> do
+    liftIO $ fetchTasks access tf

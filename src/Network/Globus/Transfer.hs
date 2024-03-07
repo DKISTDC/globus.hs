@@ -1,8 +1,10 @@
 module Network.Globus.Transfer where
 
 import Data.Aeson
+import Data.Char (toUpper)
 import Data.Tagged
-import Data.Text (Text)
+import Data.Text (Text, pack)
+import Data.Text qualified as T
 import Data.Text.Encoding (encodeUtf8)
 import Effectful (MonadIO)
 import GHC.Generics (Generic, Rep)
@@ -38,6 +40,50 @@ sendTransfer access request =
     pure tr
 
 
+-- https://docs.globus.org/api/transfer/task/#get_task_by_id
+fetchTask :: (MonadIO m) => Token Access -> Id Task -> m Task
+fetchTask access (Tagged ti) = do
+  runReq defaultHttpConfig $ do
+    res <- req GET (transferEndpoint /: "task" /: ti) NoReqBody jsonResponse (transferAuth access)
+    pure (responseBody res)
+
+
+newtype TaskFilters = TaskFilters
+  { status :: [TaskStatus]
+  }
+  deriving (Show, Eq)
+instance Monoid TaskFilters where
+  mempty = TaskFilters []
+instance Semigroup TaskFilters where
+  tf1 <> tf2 = TaskFilters{status = tf1.status <> tf2.status}
+
+
+fetchTasks :: (MonadIO m) => Token Access -> TaskFilters -> m TaskList
+fetchTasks access tf = do
+  runReq defaultHttpConfig $ do
+    res <-
+      req GET (transferEndpoint /: "task_list") NoReqBody jsonResponse $
+        transferAuth access
+          <> "filter" =: status tf.status
+    pure (responseBody res)
+ where
+  status :: [TaskStatus] -> Text
+  status [] = ""
+  status ss = "status:" <> T.intercalate "," (map (T.toUpper . pack . show) ss)
+
+
+activityUrl :: Id Task -> Uri App
+activityUrl (Tagged t) =
+  Uri Https "app.globus.org" ["activity", t] (Query [])
+
+
+taskPercentComplete :: Task -> Float
+taskPercentComplete t
+  | t.status == Succeeded = 1
+  | t.files == 0 = 0
+  | otherwise = fromIntegral (t.files_skipped + t.files_transferred) / fromIntegral t.files
+
+
 -- -----------------------------------------
 -- Submission Ids
 -- -----------------------------------------
@@ -45,7 +91,61 @@ sendTransfer access request =
 data IdResponse = IdResponse
   { value :: Text
   }
-  deriving (Generic, FromJSON)
+  deriving (Generic, FromJSON, Show)
+
+
+-- -----------------------------------------
+-- Tasks
+-- -----------------------------------------
+
+-- https://docs.globus.org/api/transfer/task/#task_document
+data Task = Task
+  { status :: TaskStatus
+  , task_id :: Id Task
+  , label :: Text
+  , -- , request_time :: UTCTime
+    -- , completion_time :: Maybe UTCTime
+    files :: Int
+  , directories :: Int
+  , files_skipped :: Int
+  , files_transferred :: Int
+  , bytes_transferred :: Int
+  , effective_bytes_per_second :: Int
+  , nice_status :: Maybe Text
+  , source_endpoint_id :: Id Collection
+  , destination_endpoint_id :: Id Collection
+  }
+  deriving (Generic, FromJSON, Show, Eq)
+
+
+data TaskStatus
+  = Active
+  | Inactive
+  | Succeeded
+  | Failed
+  deriving (Generic, Show, Eq)
+
+
+instance FromJSON TaskStatus where
+  parseJSON = genericParseJSON defaultOptions{constructorTagModifier = map toUpper}
+
+
+-- -----------------------------------------
+-- Tasks
+-- -----------------------------------------
+
+data TaskList = TaskList
+  { length :: Int
+  , limit :: Int
+  , offset :: Int
+  , total :: Int
+  , data_ :: [Task]
+  }
+  deriving (Generic, Show)
+
+
+instance FromJSON TaskList where
+  parseJSON = genericParseJSON defaultOptions{fieldLabelModifier = dataLabels}
 
 
 -- -----------------------------------------
@@ -60,7 +160,7 @@ data TransferResponse = TransferResponse
   , resource :: Text
   , request_id :: Token Request
   }
-  deriving (Generic, FromJSON)
+  deriving (Generic, FromJSON, Show)
 
 
 -- https://docs.globus.org/api/transfer/task_submit/#transfer_and_delete_documents

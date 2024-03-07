@@ -26,7 +26,6 @@ data Token'
 
 data Id'
   = Submission
-  | Task
   | Request
   | Collection
 
@@ -42,6 +41,7 @@ data Endpoint
   = Redirect
   | Authorization
   | Tokens
+  | App
 
 
 -- | Simple URI Type, since all the others are obnoxious

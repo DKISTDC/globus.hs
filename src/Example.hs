@@ -1,10 +1,12 @@
 module Example where
 
 import Data.Tagged
-import Data.Text (pack, unpack)
-import Network.Globus
-import System.Environment
 
+-- import Data.Text (pack, unpack)
+import Network.Globus
+
+
+-- import System.Environment
 
 -- Modern Research Data Portal
 -- https://docs.globus.org/guides/recipes/modern-research-data-portal/
@@ -12,26 +14,30 @@ import System.Environment
 
 main :: IO ()
 main = do
-  cid <- Tagged . pack <$> getEnv "GLOBUS_CLIENT_ID"
-  sec <- Tagged . pack <$> getEnv "GLOBUS_CLIENT_SECRET"
-  print cid
-  print sec
-
-  let red = Uri Https "thunderbolts.dev.dkistdc.nso.edu" ["redirect"] (Query [])
-  -- print red
+  -- cid <- Tagged . pack <$> getEnv "GLOBUS_CLIENT_ID"
+  -- sec <- Tagged . pack <$> getEnv "GLOBUS_CLIENT_SECRET"
+  -- print cid
+  -- print sec
   --
-  -- let cfg = config (Token (pack cid)) (Token (pack sec)) red
+  -- let red = Uri Https "thunderbolts.dev.dkistdc.nso.edu" ["redirect"] (Query [])
+  -- -- print red
+  -- --
+  -- -- let cfg = config (Token (pack cid)) (Token (pack sec)) red
+  -- --
+  -- let authUrl = authorizationUrl cid red [TransferAll] (State "state")
+  -- putStrLn $ unpack $ renderUri authUrl
   --
-  let authUrl = authorizationUrl cid red [TransferAll] (State "state")
-  putStrLn $ unpack $ renderUri authUrl
-
-  -- putStrLn "TOKEN REQUEST"
+  -- -- putStrLn "TOKEN REQUEST"
+  -- -- putStrLn "-------------"
+  -- -- res <- fetchAccessToken cid sec red (Token "M0EbLfeI64drpU7eWtIhiQx7YkzlWY")
+  -- -- print res
+  --
+  -- putStrLn "SCOPES"
   -- putStrLn "-------------"
-  -- res <- fetchAccessToken cid sec red (Token "M0EbLfeI64drpU7eWtIhiQx7YkzlWY")
-  -- print res
-
-  putStrLn "SCOPES"
-  putStrLn "-------------"
+  let tok = Tagged "Agggw8GOMQMqr19jO2lj4e3px2Jvm5Bn7vG26pdlDx8ppj6jEKTJCpNDaYpxoE2EN3GbxXzw8M87EQS0n00bBt4DWpv"
+  -- let task = Tagged "bd9f297a-d679-11ee-8702-a14c48059678"
+  t <- fetchTasks tok (TaskFilters [Succeeded])
+  print $ map (.label) t.data_
 
 -- testFetchScopes cid sec
 
