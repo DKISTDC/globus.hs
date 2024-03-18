@@ -29,7 +29,7 @@ default-extensions:
   - StrictData
 
 dependencies:
-  - base >=4.16.4.0
+  - base >=4.16.4.0 && <5
   - aeson
   - base64-bytestring
   - effectful
@@ -43,7 +43,7 @@ dependencies:
   - req
   - text
   - uri-bytestring
-  - http-api-data
+  - http-api-data && <5
   - tagged
 
 

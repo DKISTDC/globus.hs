@@ -32,8 +32,8 @@ data GlobusClient = GlobusClient
 
 
 data Globus :: Effect where
-  AuthUrl :: [Scope] -> State -> Globus m (Uri Authorization)
-  AccessToken :: Token Exchange -> Globus m (Token Access)
+  AuthUrl :: Uri Redirect -> [Scope] -> State -> Globus m (Uri Authorization)
+  AccessToken :: Token Exchange -> Uri Redirect -> Globus m (Token Access)
   SubmissionId :: Token Access -> Globus m (Id Submission)
   Transfer :: Token Access -> TransferRequest -> Globus m TransferResponse
   StatusTask :: Token Access -> Id Task -> Globus m Task
@@ -46,13 +46,12 @@ type instance DispatchOf Globus = 'Dynamic
 runGlobus
   :: (IOE :> es)
   => GlobusClient
-  -> Uri Redirect
   -> Eff (Globus : es) a
   -> Eff es a
-runGlobus g red = interpret $ \_ -> \case
-  AccessToken exc -> do
+runGlobus g = interpret $ \_ -> \case
+  AccessToken exc red -> do
     liftIO $ fetchAccessToken g.clientId g.clientSecret red exc
-  AuthUrl scopes state -> do
+  AuthUrl red scopes state -> do
     pure $ authorizationUrl g.clientId red scopes state
   SubmissionId access -> do
     liftIO $ fetchSubmissionId access
