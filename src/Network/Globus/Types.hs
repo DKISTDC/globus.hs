@@ -1,9 +1,11 @@
 module Network.Globus.Types where
 
-import Data.Aeson (ToJSON (..), Value (..))
+import Data.Aeson (FromJSON (..), ToJSON (..), Value (..), withText)
+import Data.Char (toLower)
+import Data.List.NonEmpty (NonEmpty (..))
 import Data.Proxy (Proxy (..))
 import Data.Tagged
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, splitOn, unpack)
 import Data.Text qualified as Text
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import GHC.IsList (IsList (..))
@@ -105,12 +107,46 @@ renderQuery (Query ps) = Text.intercalate "&" $ map toText ps
 data Scope
   = -- TODO: figure out all scopes and hard-code
     TransferAll
+  | Identity ScopeIdentity
+  deriving (Show, Eq)
+
+
+data ScopeIdentity
+  = OpenId
+  | Email
+  | Profile
+  deriving (Show, Eq)
 
 
 scopeText :: Scope -> Text
 scopeText TransferAll = "urn:globus:auth:scope:transfer.api.globus.org:all"
+scopeText (Identity i) = pack $ toLower <$> show i
 
 
 scope :: Text -> Maybe Scope
 scope "urn:globus:auth:scope:transfer.api.globus.org:all" = Just TransferAll
+scope "email" = Just $ Identity Email
+scope "profile" = Just $ Identity Profile
+scope "openid" = Just $ Identity OpenId
 scope _ = Nothing
+
+
+instance FromJSON Scope where
+  parseJSON = withText "Scope" $ \t -> do
+    maybe (fail $ "Invalid scope:" <> unpack t) pure $ scope t
+
+
+newtype Scopes = Scopes (NonEmpty Scope)
+  deriving newtype (Show)
+
+
+instance FromJSON Scopes where
+  parseJSON = withText "Scopes" $ \t -> do
+    ts <- parseSplitSpace t
+    ss <- mapM (parseJSON . String) ts
+    pure $ Scopes ss
+   where
+    parseSplitSpace t = do
+      case splitOn " " t of
+        (s : ss) -> pure $ s :| ss
+        _ -> fail $ "Scopes split on spaces " <> unpack t

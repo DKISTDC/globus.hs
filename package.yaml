@@ -1,5 +1,5 @@
 name:               globus
-version:            0.1.1
+version:            0.1.2
 synopsis:           GLOBUS Data Transfer
 homepage:           https://github.com/DKISTDC/globus-hs
 license:            BSD-3-Clause
@@ -43,7 +43,7 @@ dependencies:
   - req
   - text
   - uri-bytestring
-  - http-api-data && <5
+  - http-api-data
   - tagged
 
 

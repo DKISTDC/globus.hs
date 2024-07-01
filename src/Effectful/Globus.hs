@@ -16,6 +16,7 @@ module Effectful.Globus
   , TaskList (..)
   ) where
 
+import Data.List.NonEmpty (NonEmpty)
 import Data.Tagged
 import Effectful
 import Effectful.Dispatch.Dynamic
@@ -32,8 +33,9 @@ data GlobusClient = GlobusClient
 
 
 data Globus :: Effect where
-  AuthUrl :: Uri Redirect -> [Scope] -> State -> Globus m (Uri Authorization)
-  AccessToken :: Token Exchange -> Uri Redirect -> Globus m (Token Access)
+  AuthUrl :: Uri Redirect -> NonEmpty Scope -> State -> Globus m (Uri Authorization)
+  GetUserInfo :: Token OpenId -> Globus m UserInfoResponse
+  GetAccessTokens :: Token Exchange -> Uri Redirect -> Globus m (NonEmpty TokenItem)
   SubmissionId :: Token Access -> Globus m (Id Submission)
   Transfer :: Token Access -> TransferRequest -> Globus m TransferResponse
   StatusTask :: Token Access -> Id Task -> Globus m Task
@@ -49,8 +51,10 @@ runGlobus
   -> Eff (Globus : es) a
   -> Eff es a
 runGlobus g = interpret $ \_ -> \case
-  AccessToken exc red -> do
-    liftIO $ fetchAccessToken g.clientId g.clientSecret red exc
+  GetAccessTokens exc red -> do
+    liftIO $ fetchAccessTokens g.clientId g.clientSecret red exc
+  GetUserInfo ti -> do
+    liftIO $ fetchUserInfo ti
   AuthUrl red scopes state -> do
     pure $ authorizationUrl g.clientId red scopes state
   SubmissionId access -> do

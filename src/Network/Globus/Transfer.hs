@@ -81,7 +81,12 @@ taskPercentComplete :: Task -> Float
 taskPercentComplete t
   | t.status == Succeeded = 1
   | t.files == 0 = 0
-  | otherwise = fromIntegral (t.files_skipped + t.files_transferred) / fromIntegral t.files
+  | otherwise = max bytesProgress filesProgress
+ where
+  bytesProgress =
+    fromIntegral t.bytes_transferred / fromIntegral t.bytes_checksummed
+  filesProgress =
+    fromIntegral (t.files_skipped + t.files_transferred) / fromIntegral t.files
 
 
 -- -----------------------------------------
@@ -110,6 +115,7 @@ data Task = Task
   , files_skipped :: Int
   , files_transferred :: Int
   , bytes_transferred :: Int
+  , bytes_checksummed :: Int
   , effective_bytes_per_second :: Int
   , nice_status :: Maybe Text
   , source_endpoint_id :: Id Collection
@@ -176,7 +182,8 @@ data TransferRequest = TransferRequest
   , data_ :: [TransferItem]
   , -- , filter_rules :: [FilterRule]
     sync_level :: SyncLevel
-    -- , encrypt_data
+  , -- , encrypt_data
+    store_base_path_info :: Bool
   }
   deriving (Generic)
 
