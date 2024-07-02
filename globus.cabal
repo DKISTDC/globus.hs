@@ -19,7 +19,6 @@ extra-doc-files:
 library
   exposed-modules:
       Effectful.Globus
-      Example
       Network.Globus
       Network.Globus.Auth
       Network.Globus.Transfer
@@ -44,20 +43,13 @@ library
       StrictData
   ghc-options: -Wall
   build-depends:
-      aeson
+      aeson >=2 && <2.3
     , base >=4.16.4.0 && <5
-    , base64-bytestring
-    , bytestring
-    , effectful
-    , exceptions
-    , hoauth2
-    , http-api-data
-    , http-client
-    , http-client-tls
-    , http-types
-    , mtl
-    , req
-    , tagged
-    , text
-    , uri-bytestring
+    , bytestring >=0.11 && <0.13
+    , effectful ==2.3.*
+    , http-api-data ==0.6.*
+    , http-types ==0.12.*
+    , req ==3.13.*
+    , tagged ==0.8.*
+    , text ==2.*
   default-language: GHC2021

@@ -30,21 +30,17 @@ default-extensions:
 
 dependencies:
   - base >=4.16.4.0 && <5
-  - aeson
-  - base64-bytestring
-  - effectful
-  - bytestring
-  - exceptions
-  - hoauth2
-  - http-types
-  - http-client
-  - http-client-tls
-  - mtl
-  - req
-  - text
-  - uri-bytestring
-  - http-api-data
-  - tagged
+  - aeson >= 2 && < 2.3
+  - bytestring >= 0.11 && < 0.13
+  - text >= 2 && <3
+  - tagged >= 0.8 && < 0.9
+  - effectful >= 2.3 && < 2.4
+  - http-types >= 0.12 && < 0.13
+  - http-api-data >= 0.6 && < 0.7
+  - req >= 3.13 && < 3.14
+
+
+
 
 
 library:

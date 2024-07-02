@@ -2,7 +2,6 @@ module Network.Globus.Auth where
 
 import Data.Aeson
 import Data.Aeson.Types
-import Data.ByteString (ByteString)
 import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NE
@@ -11,7 +10,7 @@ import Data.Tagged
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding (encodeUtf8)
-import Effectful (MonadIO, liftIO)
+import Effectful (MonadIO)
 import GHC.Generics (Generic)
 import Network.Globus.Types
 import Network.HTTP.Req as Req
@@ -33,8 +32,6 @@ authorizationUrl (Tagged cid) red scopes (State st) =
   query =
     "client_id" =: cid
       <> "response_type" =: ("code" :: Text)
-      -- TODO: Hard-coded scopes?
-      -- allow use to specify scopes?
       <> "scope" =: Text.intercalate " " (scopeText <$> NE.toList scopes)
       <> "state" =: st
       <> redirectUri red
