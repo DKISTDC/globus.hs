@@ -1,9 +1,9 @@
 module Network.Globus
   ( module Network.Globus.Types
-  , Tagged (..)
-  , module Network.Globus.Auth
-  , Req.Scheme (..)
   , module Network.Globus.Transfer
+  , module Network.Globus.Auth
+  , Tagged (..)
+  , Req.Scheme (..)
   ) where
 
 import Data.Tagged (Tagged (..))

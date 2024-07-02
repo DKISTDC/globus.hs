@@ -6,7 +6,7 @@ cabal-version: 2.2
 
 name:           globus
 version:        0.1.2
-synopsis:       GLOBUS Data Transfer
+synopsis:       Globus Data Transfer
 category:       System, Data
 homepage:       https://github.com/DKISTDC/globus-hs
 author:         Sean Hess

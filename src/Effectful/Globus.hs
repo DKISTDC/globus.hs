@@ -3,9 +3,7 @@ module Effectful.Globus
   , GlobusClient (..)
   , runGlobus
   , State (..)
-  , Req.Scheme (..)
   , Tagged (..)
-  , module Network.Globus.Types
   , TransferRequest (..)
   , TransferResponse (..)
   , TransferItem (..)
@@ -14,6 +12,8 @@ module Effectful.Globus
   , TaskStatus (..)
   , TaskFilters (..)
   , TaskList (..)
+  , module Network.Globus.Types
+  , Req.Scheme (..)
   ) where
 
 import Data.List.NonEmpty (NonEmpty)

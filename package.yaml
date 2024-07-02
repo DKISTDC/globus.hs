@@ -1,11 +1,11 @@
 name:               globus
 version:            0.1.2
-synopsis:           GLOBUS Data Transfer
-homepage:           https://github.com/DKISTDC/globus-hs
+synopsis:           Globus Data Transfer
+homepage:           https://github.com/DKISTDC/globus.hs
 license:            BSD-3-Clause
 author:             Sean Hess
 maintainer:         shess@nso.edu
-category:           System, Data
+category:           System, Data, Science
 
 extra-doc-files:
   - README.md
