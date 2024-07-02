@@ -80,13 +80,14 @@ activityUrl (Tagged t) =
 taskPercentComplete :: Task -> Float
 taskPercentComplete t
   | t.status == Succeeded = 1
-  | t.files == 0 = 0
   | otherwise = max bytesProgress filesProgress
  where
-  bytesProgress =
-    fromIntegral t.bytes_transferred / fromIntegral t.bytes_checksummed
-  filesProgress =
-    fromIntegral (t.files_skipped + t.files_transferred) / fromIntegral t.files
+  bytesProgress
+    | t.bytes_checksummed == 0 = 0
+    | otherwise = fromIntegral t.bytes_transferred / fromIntegral t.bytes_checksummed
+  filesProgress
+    | t.files == 0 = 0
+    | otherwise = fromIntegral (t.files_skipped + t.files_transferred) / fromIntegral t.files
 
 
 -- -----------------------------------------
