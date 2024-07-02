@@ -12,4 +12,3 @@ import Network.Globus.Transfer
 import Network.Globus.Types
 import Network.HTTP.Req as Req
 
-
