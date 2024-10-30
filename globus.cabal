@@ -1,14 +1,14 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           globus
 version:        0.1.2
 synopsis:       Globus Data Transfer
-category:       System, Data
-homepage:       https://github.com/DKISTDC/globus-hs
+category:       System, Data, Science
+homepage:       https://github.com/DKISTDC/globus.hs
 author:         Sean Hess
 maintainer:     shess@nso.edu
 license:        BSD-3-Clause
@@ -46,7 +46,7 @@ library
       aeson >=2 && <2.3
     , base >=4.16.4.0 && <5
     , bytestring >=0.11 && <0.13
-    , effectful ==2.3.*
+    , effectful >=2.3 && <3
     , http-api-data ==0.6.*
     , http-types ==0.12.*
     , req ==3.13.*
