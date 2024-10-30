@@ -1,5 +1,5 @@
 name:               globus
-version:            0.1.2
+version:            0.1.3
 synopsis:           Globus Data Transfer
 homepage:           https://github.com/DKISTDC/globus.hs
 license:            BSD-3-Clause
