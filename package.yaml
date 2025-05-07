@@ -35,9 +35,13 @@ dependencies:
   - text >= 2 && <3
   - tagged >= 0.8 && < 0.9
   - effectful >= 2.3 && <3
+  - exceptions
   - http-types >= 0.12 && < 0.13
   - http-api-data >= 0.6 && < 0.7
-  - req >= 3.13 && < 3.14
+  - filepath
+  - network-uri
+  - http-client
+  - http-client-tls
 
 
 

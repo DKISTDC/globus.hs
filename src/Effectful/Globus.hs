@@ -13,17 +13,18 @@ module Effectful.Globus
   , TaskFilters (..)
   , TaskList (..)
   , module Network.Globus.Types
-  , Req.Scheme (..)
   ) where
 
+import Control.Monad.Catch (catch)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Tagged
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Effectful.Error.Static
 import Network.Globus.Auth
 import Network.Globus.Transfer
 import Network.Globus.Types
-import Network.HTTP.Req as Req
+import Network.HTTP.Client (Manager)
 
 
 data GlobusClient = GlobusClient
@@ -46,22 +47,29 @@ type instance DispatchOf Globus = 'Dynamic
 
 
 runGlobus
-  :: (IOE :> es)
+  :: (IOE :> es, Error GlobusError :> es)
   => GlobusClient
+  -> Manager
   -> Eff (Globus : es) a
   -> Eff es a
-runGlobus g = interpret $ \_ -> \case
+runGlobus g mgr = interpret $ \_ -> \case
   GetAccessTokens exc red -> do
-    liftIO $ fetchAccessTokens g.clientId g.clientSecret red exc
+    runGlobusIO $ fetchAccessTokens mgr g.clientId g.clientSecret red exc
   GetUserInfo ti -> do
-    liftIO $ fetchUserInfo ti
+    runGlobusIO $ fetchUserInfo mgr ti
   AuthUrl red scopes state -> do
     pure $ authorizationUrl g.clientId red scopes state
   SubmissionId access -> do
-    liftIO $ fetchSubmissionId access
+    runGlobusIO $ fetchSubmissionId mgr access
   Transfer access request -> do
-    liftIO $ sendTransfer access request
+    runGlobusIO $ sendTransfer mgr access request
   StatusTask access ti -> do
-    liftIO $ fetchTask access ti
+    runGlobusIO $ fetchTask mgr access ti
   StatusTasks access tf -> do
-    liftIO $ fetchTasks access tf
+    runGlobusIO $ fetchTasks mgr access tf
+ where
+  onGlobusErr :: (Error GlobusError :> es) => GlobusError -> Eff es a
+  onGlobusErr = throwError
+
+  runGlobusIO :: (IOE :> es, Error GlobusError :> es) => IO a -> Eff es a
+  runGlobusIO ma = catch (liftIO ma) onGlobusErr

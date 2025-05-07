@@ -21,6 +21,7 @@ library
       Effectful.Globus
       Network.Globus
       Network.Globus.Auth
+      Network.Globus.Request
       Network.Globus.Transfer
       Network.Globus.Types
   other-modules:
@@ -47,9 +48,13 @@ library
     , base >=4.16.4.0 && <5
     , bytestring >=0.11 && <0.13
     , effectful >=2.3 && <3
+    , exceptions
+    , filepath
     , http-api-data ==0.6.*
+    , http-client
+    , http-client-tls
     , http-types ==0.12.*
-    , req ==3.13.*
+    , network-uri
     , tagged ==0.8.*
     , text ==2.*
   default-language: GHC2021

@@ -1,51 +1,54 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Network.Globus.Transfer where
 
+import Control.Monad.Catch (MonadCatch, MonadThrow)
+import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Char (toUpper)
+import Data.Function ((&))
 import Data.Tagged
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding (encodeUtf8)
-import Effectful (MonadIO)
 import GHC.Generics (Generic, Rep)
+import Network.Globus.Request as Request
 import Network.Globus.Types
-import Network.HTTP.Req as Req
+import Network.HTTP.Client as Http
+import Network.HTTP.Types (Header)
+import Network.URI
+import Network.URI.Static (uri)
 
 
--- -----------------------------------------
+--------------------------------------------
 -- API
--- -----------------------------------------
+--------------------------------------------
 
-fetchSubmissionId :: (MonadIO m) => Token Access -> m (Id Submission)
-fetchSubmissionId access =
-  runReq defaultHttpConfig $ do
-    res <- req GET (transferEndpoint /: "submission_id") NoReqBody jsonResponse (transferAuth access)
-    let idRes = responseBody res :: IdResponse
-    pure $ Tagged idRes.value
+fetchSubmissionId :: (MonadThrow m, MonadCatch m, MonadIO m) => Manager -> Token Access -> m (Id Submission)
+fetchSubmissionId mgr access = do
+  req <- Request.get (transferEndpoint /: "submission_id") [transferAuth access]
+  sendJSON mgr req
 
 
-transferAuth :: Token Access -> Option Https
-transferAuth (Tagged access) = oAuth2Bearer (encodeUtf8 access)
+transferAuth :: Token Access -> Header
+transferAuth (Tagged access) = ("Authorization", "Bearer " <> encodeUtf8 access)
 
 
-transferEndpoint :: Req.Url 'Https
-transferEndpoint = https "transfer.api.globus.org" /: "v0.10"
+transferEndpoint :: Uri a
+transferEndpoint = Tagged $ [uri|https://transfer.api.globus.org/v0.10|]
 
 
-sendTransfer :: (MonadIO m) => Token Access -> TransferRequest -> m TransferResponse
-sendTransfer access request =
-  runReq defaultHttpConfig $ do
-    res <- req POST (transferEndpoint /: "transfer") (ReqBodyJson request) jsonResponse (transferAuth access)
-    let tr = responseBody res :: TransferResponse
-    pure tr
+sendTransfer :: (MonadIO m, MonadThrow m, MonadCatch m) => Manager -> Token Access -> TransferRequest -> m TransferResponse
+sendTransfer mgr access treq = do
+  req <- Request.post (transferEndpoint /: "transfer") [transferAuth access] treq
+  sendJSON mgr req
 
 
 -- https://docs.globus.org/api/transfer/task/#get_task_by_id
-fetchTask :: (MonadIO m) => Token Access -> Id Task -> m Task
-fetchTask access (Tagged ti) = do
-  runReq defaultHttpConfig $ do
-    res <- req GET (transferEndpoint /: "task" /: ti) NoReqBody jsonResponse (transferAuth access)
-    pure (responseBody res)
+fetchTask :: (MonadIO m, MonadThrow m, MonadCatch m) => Manager -> Token Access -> Id Task -> m Task
+fetchTask mgr access (Tagged ti) = do
+  req <- Request.get (transferEndpoint /: "task" /: T.unpack ti) [transferAuth access]
+  sendJSON mgr req
 
 
 newtype TaskFilters = TaskFilters
@@ -58,23 +61,19 @@ instance Semigroup TaskFilters where
   tf1 <> tf2 = TaskFilters{status = tf1.status <> tf2.status}
 
 
-fetchTasks :: (MonadIO m) => Token Access -> TaskFilters -> m TaskList
-fetchTasks access tf = do
-  runReq defaultHttpConfig $ do
-    res <-
-      req GET (transferEndpoint /: "task_list") NoReqBody jsonResponse $
-        transferAuth access
-          <> "filter" =: status tf.status
-    pure (responseBody res)
+fetchTasks :: (MonadIO m, MonadThrow m, MonadCatch m) => Manager -> Token Access -> TaskFilters -> m TaskList
+fetchTasks mgr access tf = do
+  req <- Request.get (transferEndpoint /: "task_list" & param "filter" (status tf.status)) [transferAuth access]
+  sendJSON mgr req
  where
   status :: [TaskStatus] -> Text
   status [] = ""
-  status ss = "status:" <> T.intercalate "," (map (T.toUpper . pack . show) ss)
+  status ss = "status:" <> T.intercalate "," (fmap (T.toUpper . T.pack . show) ss)
 
 
-activityUrl :: Id Task -> Uri App
+activityUrl :: Id Task -> Tagged App URI
 activityUrl (Tagged t) =
-  Uri Https "app.globus.org" ["activity", t] (Query [])
+  Tagged [uri|https://app.globus.org/activity|] /: T.unpack t
 
 
 taskPercentComplete :: Task -> Float
@@ -134,7 +133,7 @@ data TaskStatus
 
 
 instance FromJSON TaskStatus where
-  parseJSON = genericParseJSON defaultOptions{constructorTagModifier = map toUpper}
+  parseJSON = genericParseJSON defaultOptions{constructorTagModifier = fmap toUpper}
 
 
 -- -----------------------------------------
