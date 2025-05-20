@@ -1,16 +1,20 @@
 module Network.Globus.Types where
 
 import Control.Monad.Catch (Exception)
-import Data.Aeson (FromJSON (..), ToJSON (..), Value (..), withText)
+import Data.Aeson
+import Data.Aeson.Types (Parser)
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Lazy (ByteString)
 import Data.Char (toLower)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Proxy (Proxy (..))
+import Data.String (IsString (..))
 import Data.Tagged
 import Data.Text (Text, pack, splitOn, unpack)
 import Data.Text.Encoding (encodeUtf8)
+import GHC.Generics (Generic, Rep)
 import GHC.TypeLits
+import Network.HTTP.Client (Request)
 import Network.HTTP.Types (Status, urlEncode)
 import Network.URI
 import System.FilePath
@@ -38,6 +42,7 @@ appendQuery k mv = \case
   keyValue =
     BC.unpack $
       (urlEncode True $ encodeUtf8 k)
+        <> "="
         <> maybe "" (urlEncode True . encodeUtf8) mv
 
 
@@ -45,11 +50,32 @@ renderUri :: Uri a -> Text
 renderUri (Tagged u) = pack $ uriToString id u ""
 
 
+-- | Opaque secret identifying the user. Validate on redirect
+newtype State = State Text
+  deriving newtype (IsString, FromJSON, Eq)
+  deriving (Show)
+
+
+data TokenItem = TokenItem
+  { scope :: Scopes
+  , access_token :: Token Access
+  , expires_in :: Int
+  , -- , resource_server :: Text -- "transfer.api.globus.org"
+    -- , tokenType :: Text -- "Bearer"
+    state :: State
+    -- , refresh_token :: Token Refresh
+    -- id_token :: Token Identity
+  }
+  deriving (Generic, FromJSON, Eq, Show)
+
+
 data GlobusError
   = InvalidURI String URI
-  | ResponseBadStatus Status ByteString
-  | ResponseBadJSON String ByteString
-  deriving (Show, Eq, Exception)
+  | Unauthorized Request ByteString
+  | ResponseBadStatus Request Status ByteString
+  | ResponseBadJSON Request String ByteString
+  | MissingScope Scope (NonEmpty TokenItem)
+  deriving (Show, Exception)
 
 
 type Token a = Tagged a Text
@@ -70,11 +96,36 @@ data Id'
   | Collection
 
 
+dataLabelsToJSON :: (Generic a, GToJSON' Value Zero (Rep a)) => a -> Value
+dataLabelsToJSON = genericToJSON defaultOptions{fieldLabelModifier = dataLabels}
+
+
+dataLabelsFromJSON :: (Generic a, GFromJSON Zero (Rep a)) => Value -> Parser a
+dataLabelsFromJSON = genericParseJSON defaultOptions{fieldLabelModifier = dataLabels}
+
+
+dataLabels :: String -> String
+dataLabels "data_" = "DATA"
+dataLabels "data_type" = "DATA_TYPE"
+dataLabels f = f
+
+
 data DataType (s :: Symbol) = DataType
 
 
 instance (KnownSymbol s) => ToJSON (DataType s) where
   toJSON _ = String $ pack $ symbolVal @s Proxy
+instance FromJSON (DataType s) where
+  parseJSON _ = pure DataType
+
+
+data DataKey s = DataKey
+  { data_type :: DataType s
+  , value :: Text
+  }
+  deriving (Generic)
+instance FromJSON (DataKey s) where
+  parseJSON = dataLabelsFromJSON
 
 
 data Endpoint
@@ -172,7 +223,7 @@ instance FromJSON Scope where
 
 
 newtype Scopes = Scopes (NonEmpty Scope)
-  deriving newtype (Show)
+  deriving newtype (Show, Eq)
 
 
 instance FromJSON Scopes where

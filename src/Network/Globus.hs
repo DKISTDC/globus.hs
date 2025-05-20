@@ -8,5 +8,5 @@ module Network.Globus
 import Data.Tagged (Tagged (..))
 import Network.Globus.Auth
 import Network.Globus.Transfer
-import Network.Globus.Types
+import Network.Globus.Types hiding (appendQuery, param)
 

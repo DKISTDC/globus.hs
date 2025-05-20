@@ -11,7 +11,7 @@ import Data.Tagged
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding (encodeUtf8)
-import GHC.Generics (Generic, Rep)
+import GHC.Generics (Generic)
 import Network.Globus.Request as Request
 import Network.Globus.Types
 import Network.HTTP.Client as Http
@@ -27,7 +27,8 @@ import Network.URI.Static (uri)
 fetchSubmissionId :: (MonadThrow m, MonadCatch m, MonadIO m) => Manager -> Token Access -> m (Id Submission)
 fetchSubmissionId mgr access = do
   req <- Request.get (transferEndpoint /: "submission_id") [transferAuth access]
-  sendJSON mgr req
+  DataKey _ s <- sendJSON mgr req
+  pure $ Tagged s
 
 
 transferAuth :: Token Access -> Header
@@ -160,13 +161,13 @@ instance FromJSON TaskList where
 
 data TransferResponse = TransferResponse
   { task_id :: Id Task
-  , submission_id :: Token Submission
+  , submission_id :: Id Submission
   , -- , code :: TransferCode -- Accepted, Duplicate
     message :: Text
   , resource :: Text
   , request_id :: Token Request
   }
-  deriving (Generic, FromJSON, Show)
+  deriving (Generic, FromJSON)
 
 
 -- https://docs.globus.org/api/transfer/task_submit/#transfer_and_delete_documents
@@ -189,7 +190,7 @@ data TransferRequest = TransferRequest
 
 
 instance ToJSON TransferRequest where
-  toJSON = dataLabelsJson
+  toJSON = dataLabelsToJSON
 
 
 -- https://docs.globus.org/api/transfer/task_submit/#transfer_item_fields
@@ -211,7 +212,7 @@ data TransferItem = TransferItem
 
 
 instance ToJSON TransferItem where
-  toJSON = dataLabelsJson
+  toJSON = dataLabelsToJSON
 
 
 -- newtype FilterRule = FilterRule
@@ -236,13 +237,3 @@ instance ToJSON SyncLevel where
     toInt SyncSize = 1
     toInt SyncTimestamp = 2
     toInt SyncChecksum = 3
-
-
-dataLabelsJson :: (Generic a, GToJSON' Value Zero (Rep a)) => a -> Value
-dataLabelsJson = genericToJSON defaultOptions{fieldLabelModifier = dataLabels}
-
-
-dataLabels :: String -> String
-dataLabels "data_" = "DATA"
-dataLabels "data_type" = "DATA_TYPE"
-dataLabels f = f

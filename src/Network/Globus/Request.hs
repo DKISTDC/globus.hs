@@ -1,6 +1,6 @@
 module Network.Globus.Request where
 
-import Control.Monad (unless)
+import Control.Monad (unless, when)
 import Control.Monad.Catch (MonadCatch, MonadThrow, SomeException, catch, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson (FromJSON (..), ToJSON (..), eitherDecode, encode)
@@ -32,15 +32,16 @@ sendJSON :: (MonadIO m, FromJSON a, MonadThrow m) => Manager -> Request -> m a
 sendJSON mgr req = do
   res <- liftIO $ Http.httpLbs req mgr
 
+  when (responseStatus res == unauthorized401) $ do
+    throwM $ Unauthorized req (responseBody res)
+
   unless (responseStatus res == status200) $ do
-    throwM $ ResponseBadStatus (responseStatus res) (responseBody res)
+    throwM $ ResponseBadStatus req (responseStatus res) (responseBody res)
 
   case eitherDecode (responseBody res) of
-    Left e -> throwM $ ResponseBadJSON (show e) (responseBody res)
+    Left e -> throwM $ ResponseBadJSON req (show e) (responseBody res)
     Right a -> pure a
 
 
 oAuth2Bearer :: Token a -> Header
 oAuth2Bearer (Tagged tok) = ("Authorization", "Bearer " <> encodeUtf8 tok)
-
-

@@ -9,7 +9,6 @@ import Data.Function ((&))
 import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NE
-import Data.String (IsString)
 import Data.Tagged
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -21,12 +20,6 @@ import Network.Globus.Types
 import Network.HTTP.Client (Manager, applyBasicAuth)
 import Network.HTTP.Types (Header, methodPost)
 import Network.URI.Static (uri)
-
-
--- | Opaque secret identifying the user. Validate on redirect
-newtype State = State Text
-  deriving newtype (IsString, FromJSON)
-  deriving (Show)
 
 
 -- | The end user must visit this url
@@ -72,19 +65,6 @@ instance FromJSON TokenResponse where
     token <- parseJSON $ Object m :: Parser TokenItem
     other <- m .: "other_tokens"
     pure $ TokenResponse $ token :| other
-
-
-data TokenItem = TokenItem
-  { scope :: Scopes
-  , access_token :: Token Access
-  , expires_in :: Int
-  , -- , resource_server :: Text -- "transfer.api.globus.org"
-    -- , tokenType :: Text -- "Bearer"
-    state :: State
-    -- , refresh_token :: Token Refresh
-    -- id_token :: Token Identity
-  }
-  deriving (Generic, FromJSON, Show)
 
 
 scopeToken :: Scope -> NonEmpty TokenItem -> Maybe (Token Access)

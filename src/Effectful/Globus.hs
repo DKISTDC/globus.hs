@@ -13,6 +13,7 @@ module Effectful.Globus
   , TaskFilters (..)
   , TaskList (..)
   , module Network.Globus.Types
+  , requireScopeToken
   ) where
 
 import Control.Monad.Catch (catch)
@@ -23,7 +24,7 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Network.Globus.Auth
 import Network.Globus.Transfer
-import Network.Globus.Types
+import Network.Globus.Types hiding (appendQuery, param)
 import Network.HTTP.Client (Manager)
 
 
@@ -37,7 +38,7 @@ data Globus :: Effect where
   AuthUrl :: Uri Redirect -> NonEmpty Scope -> State -> Globus m (Uri Authorization)
   GetUserInfo :: Token OpenId -> Globus m UserInfoResponse
   GetAccessTokens :: Token Exchange -> Uri Redirect -> Globus m (NonEmpty TokenItem)
-  SubmissionId :: Token Access -> Globus m (Id Submission)
+  GetSubmissionId :: Token Access -> Globus m (Id Submission)
   Transfer :: Token Access -> TransferRequest -> Globus m TransferResponse
   StatusTask :: Token Access -> Id Task -> Globus m Task
   StatusTasks :: Token Access -> TaskFilters -> Globus m TaskList
@@ -59,7 +60,7 @@ runGlobus g mgr = interpret $ \_ -> \case
     runGlobusIO $ fetchUserInfo mgr ti
   AuthUrl red scopes state -> do
     pure $ authorizationUrl g.clientId red scopes state
-  SubmissionId access -> do
+  GetSubmissionId access -> do
     runGlobusIO $ fetchSubmissionId mgr access
   Transfer access request -> do
     runGlobusIO $ sendTransfer mgr access request
@@ -73,3 +74,9 @@ runGlobus g mgr = interpret $ \_ -> \case
 
   runGlobusIO :: (IOE :> es, Error GlobusError :> es) => IO a -> Eff es a
   runGlobusIO ma = catch (liftIO ma) onGlobusErr
+
+
+requireScopeToken :: (Error GlobusError :> es) => Scope -> NonEmpty TokenItem -> Eff es (Token a)
+requireScopeToken s tis = do
+  Tagged t <- maybe (throwError $ MissingScope s tis) pure $ scopeToken s tis
+  pure $ Tagged t
