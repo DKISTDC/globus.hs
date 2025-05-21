@@ -1,11 +1,12 @@
 name:               globus
-version:            0.1.3
+version:            0.2.0
 synopsis:           Globus Data Transfer
 homepage:           https://github.com/DKISTDC/globus.hs
 license:            BSD-3-Clause
 author:             Sean Hess
 maintainer:         shess@nso.edu
 category:           System, Data, Science
+description:        Haskell Client for Globus File Transfer API
 
 extra-doc-files:
   - README.md
@@ -35,13 +36,13 @@ dependencies:
   - text >= 2 && <3
   - tagged >= 0.8 && < 0.9
   - effectful >= 2.3 && <3
-  - exceptions
+  - exceptions >= 0.10 && < 0.11
   - http-types >= 0.12 && < 0.13
   - http-api-data >= 0.6 && < 0.7
-  - filepath
-  - network-uri
-  - http-client
-  - http-client-tls
+  - filepath >=1.4 && < 1.6
+  - network-uri >=2.6 && <2.7
+  - http-client >= 0.7 && <0.8
+  - http-client-tls >= 0.3 && <0.4
 
 
 

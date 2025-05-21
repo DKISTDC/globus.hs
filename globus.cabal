@@ -5,8 +5,9 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           globus
-version:        0.1.3
+version:        0.2.0
 synopsis:       Globus Data Transfer
+description:    Haskell Client for Globus File Transfer API
 category:       System, Data, Science
 homepage:       https://github.com/DKISTDC/globus.hs
 author:         Sean Hess
@@ -48,13 +49,13 @@ library
     , base >=4.16.4.0 && <5
     , bytestring >=0.11 && <0.13
     , effectful >=2.3 && <3
-    , exceptions
-    , filepath
+    , exceptions ==0.10.*
+    , filepath >=1.4 && <1.6
     , http-api-data ==0.6.*
-    , http-client
-    , http-client-tls
+    , http-client ==0.7.*
+    , http-client-tls ==0.3.*
     , http-types ==0.12.*
-    , network-uri
+    , network-uri ==2.6.*
     , tagged ==0.8.*
     , text ==2.*
   default-language: GHC2021
